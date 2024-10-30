@@ -179,6 +179,7 @@ const DataConnector = {
         })
         .catch((e) => {
           console.error(e);
+          showToast(e.message, "error");
           return { data: null, error: e.message };
         });
     },

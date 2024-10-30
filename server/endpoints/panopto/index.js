@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { processPanoptoVideosFromCanvas } = require('../../jobs/process-panopto-videos');
+const { CollectorApi } = require('../../utils/collectorApi');
 const { reqBody } = require('../../utils/http');
 
 router.post('/', async (request, response) => {
@@ -14,16 +14,21 @@ router.post('/', async (request, response) => {
       });
     }
 
-    // Start processing in background
-    processPanoptoVideosFromCanvas({ canvasUrl, canvasToken, courseId })
-      .catch(error => console.error('Background processing failed:', error));
+    const collector = new CollectorApi();
+    if (!(await collector.online())) {
+      return response.status(503).json({
+        success: false,
+        reason: 'Collector service is not available'
+      });
+    }
 
-    return response.status(200).json({
-      success: true,
-      data: {
-        message: 'Video processing started'
-      }
+    const result = await collector.processPanoptoVideos({
+      canvasUrl,
+      canvasToken,
+      courseId,
     });
+
+    return response.status(200).json(result);
 
   } catch (error) {
     console.error(error);

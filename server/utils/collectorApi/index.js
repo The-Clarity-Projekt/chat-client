@@ -173,6 +173,36 @@ class CollectorApi {
         return { success: false, content: null };
       });
   }
+
+  async processPanoptoVideos({ canvasUrl, canvasToken, courseId }) {
+    const data = JSON.stringify({ 
+      canvasUrl, 
+      canvasToken, 
+      courseId,
+      options: this.#attachOptions(),
+    });
+
+    return await fetch(`${this.endpoint}/panopto`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Integrity": this.comkey.sign(data),
+        "X-Payload-Signer": this.comkey.encrypt(
+          new EncryptionManager().xPayload
+        ),
+      },
+      body: data,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Response could not be completed");
+        return res.json();
+      })
+      .then((res) => res)
+      .catch((e) => {
+        this.log(e.message);
+        return { success: false, reason: e.message };
+      });
+  }
 }
 
 module.exports.CollectorApi = CollectorApi;
