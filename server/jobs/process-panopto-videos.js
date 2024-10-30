@@ -3,9 +3,8 @@ const { CollectorApi } = require('../utils/collectorApi');
 const { log, conclude } = require('./helpers/index.js');
 const { getVectorDbClass } = require('../utils/helpers/index.js');
 const { TranscriptionQueue } = require('../utils/queues/TranscriptionQueue');
+const { CanvasClient } = require('../utils/extensions/Canvas/client.js');
 const Groq = require('groq-sdk');
-const { PanoptoClient } = require('../utils/extensions/Panopto/client.js');
-const { default: slugify } = require("slugify");
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -101,8 +100,7 @@ async function processPanoptoVideo(video, panoptoClient, university) {
   }
 }
 
-// Main execution
-(async () => {
+async function processPanoptoVideosFromCanvas({ canvasUrl, canvasToken, courseId }) {
   try {
     if (!process.env.GROQ_API_KEY) {
       throw new Error('GROQ_API_KEY environment variable is required');
@@ -114,46 +112,48 @@ async function processPanoptoVideo(video, panoptoClient, university) {
       return;
     }
 
-    const { university, authToken, folderId } = process.env.PANOPTO_CONFIG 
-      ? JSON.parse(process.env.PANOPTO_CONFIG) 
-      : {};
-
-    if (!university || !authToken) {
-      log('Missing required Panopto configuration');
-      return;
-    }
-
-    const panoptoClient = new PanoptoClient({
-      university,
-      authToken,
+    const canvasClient = new CanvasClient({
+      baseUrl: canvasUrl,
+      token: canvasToken,
     });
 
-    const videos = await panoptoClient.getVideos(folderId);
-    log(`Found ${videos.length} videos to process`);
+    // Get courses if no specific courseId provided
+    const courses = courseId 
+      ? [{ id: courseId }]
+      : await canvasClient.getCourses();
+
+    log(`Found ${courses.length} courses to process`);
 
     const processedVideos = [];
     const skippedVideos = [];
+    const vectorDb = getVectorDbClass();
 
-    for (const video of videos) {
-      const document = await processPanoptoVideo(video, panoptoClient, university);
-      if (!document) {
-        skippedVideos.push(video.title);
+    for (const course of courses) {
+      try {
+        log(`Processing videos for course ${course.id}`);
+        const videos = await canvasClient.getPanoptoVideos(course.id);
+        
+        for (const video of videos) {
+          const document = await processPanoptoVideo(video, canvasClient.panoptoClient, canvasClient.university);
+          if (!document) {
+            skippedVideos.push(video.title);
+            continue;
+          }
+
+          const identifier = createVideoIdentifier(canvasClient.university, video.id);
+          await vectorDb.addDocumentToNamespace(
+            'panopto',
+            document,
+            `panopto/${identifier}.json`
+          );
+
+          processedVideos.push(video.title);
+          log(`Successfully processed video: ${video.title}`);
+        }
+      } catch (error) {
+        log(`Error processing course ${course.id}: ${error.message}`);
         continue;
       }
-
-      const identifier = createVideoIdentifier(university, video.id);
-      const vectorDb = getVectorDbClass();
-      
-      const filePath = `panopto/${identifier}.json`;
-      
-      await vectorDb.addDocumentToNamespace(
-        'panopto',
-        document,
-        filePath
-      );
-
-      processedVideos.push(video.title);
-      log(`Successfully processed video: ${video.title}`);
     }
 
     log(`Processing complete. Processed ${processedVideos.length} videos, skipped ${skippedVideos.length} videos.`);
@@ -164,7 +164,11 @@ async function processPanoptoVideo(video, panoptoClient, university) {
   } catch (error) {
     console.error(error);
     log(`Error: ${error.message}`);
-  } finally {
-    conclude();
+    throw error;
   }
-})(); 
+}
+
+// Export for use in API endpoints
+module.exports = {
+  processPanoptoVideosFromCanvas
+}; 

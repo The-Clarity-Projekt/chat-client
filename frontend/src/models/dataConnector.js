@@ -162,14 +162,14 @@ const DataConnector = {
   },
 
   panopto: {
-    collect: async function ({ university, authToken, folderId }) {
+    collect: async function ({ canvasUrl, canvasToken, courseId }) {
       return await fetch(`${API_BASE}/ext/panopto`, {
         method: "POST",
         headers: baseHeaders(),
         body: JSON.stringify({
-          university,
-          authToken,
-          folderId,
+          canvasUrl,
+          canvasToken,
+          courseId,
         }),
       })
         .then((res) => res.json())
