@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Plus, List } from "@phosphor-icons/react";
+import { Plus, List, ChatCircle, Database, Gear, Users, Desktop } from "@phosphor-icons/react";
 import NewWorkspaceModal, {
   useNewWorkspaceModal,
 } from "../Modals/NewWorkspace";
@@ -24,33 +24,42 @@ export default function Sidebar() {
   } = useNewWorkspaceModal();
   const { t } = useTranslation();
 
+  // Define icons for menu items
+  const menuIcons = {
+    ChatIcon: ChatCircle,
+    DatabaseIcon: Database,
+    SettingsIcon: Gear,
+    ServerIcon: Desktop,
+    UsersIcon: Users
+  };
+
   const menuItems = [
     {
       name: 'Chat',
       path: paths.chat(),
-      icon: ChatIcon,
+      icon: menuIcons.ChatIcon,
     },
     {
       name: 'Data Sources',
       path: paths.dataSources(),
-      icon: DatabaseIcon,
+      icon: menuIcons.DatabaseIcon,
     },
     {
       name: 'Settings',
       path: paths.settings(),
-      icon: SettingsIcon,
+      icon: menuIcons.SettingsIcon,
     },
     // Only show admin-specific items to admins
     ...(user?.role === 'admin' ? [
       {
         name: 'System',
         path: paths.admin.system(),
-        icon: ServerIcon,
+        icon: menuIcons.ServerIcon,
       },
       {
         name: 'Users',
         path: paths.admin.users(),
-        icon: UsersIcon,
+        icon: menuIcons.UsersIcon,
       }
     ] : [])
   ];
@@ -74,6 +83,23 @@ export default function Sidebar() {
       >
         <div className="flex flex-col h-full overflow-x-hidden">
           <div className="flex-grow flex flex-col min-w-[235px]">
+            {/* Add menu items */}
+            <div className="flex flex-col gap-y-2 mb-4">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className="flex items-center gap-x-2 px-3 py-2 rounded-lg hover:bg-zinc-800 text-white/80 hover:text-white"
+                  >
+                    <Icon size={20} />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
             <div className="relative h-[calc(100%-60px)] flex flex-col w-full justify-between pt-[10px] overflow-y-scroll no-scroll">
               <div className="flex flex-col gap-y-2 pb-[60px] overflow-y-scroll no-scroll">
                 <div className="flex gap-x-2 items-center justify-between">
