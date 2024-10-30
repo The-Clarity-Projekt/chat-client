@@ -12,10 +12,9 @@ import SettingsButton from "../SettingsButton";
 import { Link } from "react-router-dom";
 import paths from "@/utils/paths";
 import { useTranslation } from "react-i18next";
-import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { logo } = useLogo();
   const sidebarRef = useRef(null);
   const {

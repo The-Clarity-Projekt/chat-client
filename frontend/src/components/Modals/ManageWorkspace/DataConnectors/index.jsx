@@ -1,10 +1,10 @@
 import React from 'react';
-import { useAuth } from '../../../../context/AuthContext';
+import useUser from "@/hooks/useUser";
 import PanoptoOptions from './Connectors/Panopto';
 // ... other imports
 
 export default function DataConnectors() {
-  const { user } = useAuth();
+  const { user } = useUser();
   
   // Remove admin check - allow all authenticated users
   if (!user) {
