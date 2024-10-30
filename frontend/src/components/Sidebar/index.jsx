@@ -12,9 +12,10 @@ import SettingsButton from "../SettingsButton";
 import { Link } from "react-router-dom";
 import paths from "@/utils/paths";
 import { useTranslation } from "react-i18next";
+import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { logo } = useLogo();
   const sidebarRef = useRef(null);
   const {
@@ -23,6 +24,37 @@ export default function Sidebar() {
     hideModal: hideNewWsModal,
   } = useNewWorkspaceModal();
   const { t } = useTranslation();
+
+  const menuItems = [
+    {
+      name: 'Chat',
+      path: paths.chat(),
+      icon: ChatIcon,
+    },
+    {
+      name: 'Data Sources',
+      path: paths.dataSources(),
+      icon: DatabaseIcon,
+    },
+    {
+      name: 'Settings',
+      path: paths.settings(),
+      icon: SettingsIcon,
+    },
+    // Only show admin-specific items to admins
+    ...(user?.role === 'admin' ? [
+      {
+        name: 'System',
+        path: paths.admin.system(),
+        icon: ServerIcon,
+      },
+      {
+        name: 'Users',
+        path: paths.admin.users(),
+        icon: UsersIcon,
+      }
+    ] : [])
+  ];
 
   return (
     <div>
