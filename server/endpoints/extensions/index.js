@@ -64,6 +64,28 @@ function extensionEndpoints(app) {
   );
 
   app.post(
+    "/ext/panopto",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const responseFromProcessor =
+          await new CollectorApi().forwardExtensionRequest({
+            endpoint: "/ext/panopto",
+            method: "POST",
+            body: request.body,
+          });
+        await Telemetry.sendTelemetry("extension_invoked", {
+          type: "panopto",
+        });
+        response.status(200).json(responseFromProcessor);
+      } catch (e) {
+        console.error(e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.post(
     "/ext/youtube/transcript",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
@@ -106,6 +128,7 @@ function extensionEndpoints(app) {
       }
     }
   );
+
   app.post(
     "/ext/website-depth",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
