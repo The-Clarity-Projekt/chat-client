@@ -1,5 +1,5 @@
 # Setup base image
-FROM ubuntu:latest AS base
+FROM ubuntu:jammy-20240627.1 AS base
 
 # Build arguments
 ARG ARG_UID=1000
