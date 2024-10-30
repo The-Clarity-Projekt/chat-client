@@ -160,6 +160,29 @@ const DataConnector = {
         });
     },
   },
+
+  panopto: {
+    collect: async function ({ university, authToken, folderId }) {
+      return await fetch(`${API_BASE}/ext/panopto`, {
+        method: "POST",
+        headers: baseHeaders(),
+        body: JSON.stringify({
+          university,
+          authToken,
+          folderId,
+        }),
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          if (!res.success) throw new Error(res.reason);
+          return { data: res.data, error: null };
+        })
+        .catch((e) => {
+          console.error(e);
+          return { data: null, error: e.message };
+        });
+    },
+  },
 };
 
 export default DataConnector;

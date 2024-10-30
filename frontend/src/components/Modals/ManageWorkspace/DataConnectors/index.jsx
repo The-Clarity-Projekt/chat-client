@@ -7,6 +7,7 @@ import ConfluenceOptions from "./Connectors/Confluence";
 import { useState } from "react";
 import ConnectorOption from "./ConnectorOption";
 import WebsiteDepthOptions from "./Connectors/WebsiteDepth";
+import PanoptoOptions from "./Connectors/Panopto";
 
 export const DATA_CONNECTORS = {
   github: {
@@ -41,6 +42,12 @@ export const DATA_CONNECTORS = {
     image: ConnectorImages.confluence,
     description: "Import an entire Confluence page in a single click.",
     options: <ConfluenceOptions />,
+  },
+  panopto: {
+    name: "Panopto Videos",
+    image: ConnectorImages.panopto,
+    description: "Import transcripts from Panopto video lectures and presentations.",
+    options: <PanoptoOptions />,
   },
 };
 
